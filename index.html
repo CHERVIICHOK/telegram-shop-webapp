@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Shop</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            background: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .product {
+            background: var(--tg-theme-secondary-bg-color, #f5f5f5);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        
+        .product:active {
+            transform: scale(0.98);
+        }
+        
+        .product-image {
+            width: 100%;
+            height: 100px;
+            background: #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+        
+        .product h3 {
+            font-size: 16px;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+        
+        .product-price {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--tg-theme-button-color, #3390ec);
+            margin-bottom: 10px;
+        }
+        
+        .buy-button {
+            width: 100%;
+            padding: 10px;
+            background: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .buy-button:active {
+            opacity: 0.8;
+        }
+        
+        .cart-info {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: var(--tg-theme-button-color, #3390ec);
+            color: white;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🛍 Наш магазин</h1>
+        <p>Выберите товары:</p>
+    </div>
+    
+    <div class="products">
+        <div class="product">
+            <div class="product-image">📱</div>
+            <h3>Смартфон</h3>
+            <div class="product-price">29 990 ₽</div>
+            <button class="buy-button" onclick="addToCart('Смартфон', 29990)">В корзину</button>
+        </div>
+        
+        <div class="product">
+            <div class="product-image">💻</div>
+            <h3>Ноутбук</h3>
+            <div class="product-price">54 990 ₽</div>
+            <button class="buy-button" onclick="addToCart('Ноутбук', 54990)">В корзину</button>
+        </div>
+        
+        <div class="product">
+            <div class="product-image">⌚</div>
+            <h3>Смарт-часы</h3>
+            <div class="product-price">12 990 ₽</div>
+            <button class="buy-button" onclick="addToCart('Смарт-часы', 12990)">В корзину</button>
+        </div>
+        
+        <div class="product">
+            <div class="product-image">🎧</div>
+            <h3>Наушники</h3>
+            <div class="product-price">7 990 ₽</div>
+            <button class="buy-button" onclick="addToCart('Наушники', 7990)">В корзину</button>
+        </div>
+        
+        <div class="product">
+            <div class="product-image">📷</div>
+            <h3>Камера</h3>
+            <div class="product-price">45 990 ₽</div>
+            <button class="buy-button" onclick="addToCart('Камера', 45990)">В корзину</button>
+        </div>
+        
+        <div class="product">
+            <div class="product-image">🎮</div>
+            <h3>Игровая консоль</h3>
+            <div class="product-price">39 990 ₽</div>
+            <button class="buy-button" onclick="addToCart('Игровая консоль', 39990)">В корзину</button>
+        </div>
+    </div>
+    
+    <div class="cart-info" id="cartInfo"></div>
+    
+    <script>
+        // Инициализация Telegram Web App
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        
+        let cart = [];
+        let totalPrice = 0;
+        
+        function addToCart(productName, price) {
+            cart.push({name: productName, price: price});
+            totalPrice += price;
+            
+            // Показываем уведомление
+            tg.HapticFeedback.impactOccurred('light');
+            
+            // Обновляем главную кнопку
+            updateMainButton();
+            
+            // Показываем попап
+            tg.showPopup({
+                title: 'Товар добавлен',
+                message: `${productName} добавлен в корзину`,
+                buttons: [{type: 'ok'}]
+            });
+        }
+        
+        function updateMainButton() {
+            if (cart.length > 0) {
+                tg.MainButton.text = `Оформить заказ (${totalPrice.toLocaleString()} ₽)`;
+                tg.MainButton.show();
+            } else {
+                tg.MainButton.hide();
+            }
+        }
+        
+        // Обработка нажатия на главную кнопку
+        tg.MainButton.onClick(() => {
+            const orderData = {
+                items: cart,
+                total: totalPrice
+            };
+            tg.sendData(JSON.stringify(orderData));
+        });
+        
+        // Настройка цветов
+        tg.setHeaderColor(tg.themeParams.bg_color);
+        tg.setBackgroundColor(tg.themeParams.bg_color);
+    </script>
+</body>
+</html>
